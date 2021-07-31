@@ -6,6 +6,7 @@ import tensorflow as tf
 import embed
 import utils
 import data
+from transformers import EncoderOnlyTransformer
 
 RecurrentState = Any
 Inputs = Tuple[data.Game, tf.Tensor]
@@ -296,6 +297,27 @@ class Copier(Network):
   def unroll(self, inputs, prev_state):
     return inputs[1], ()
 
+class TransformerWrapper(Network):
+  '''
+    A Wrapper for the output of the Encoder-only transformer, implementation in transformers.py
+  '''
+  CONFIG=dict()
+
+  def __init__(self):
+    super().__init__(name='transformer')
+
+  def initial_state(self, batch_size):
+    return ()
+
+  def step(self, inputs, prev_state):
+    raise NotImplementedError()
+
+  def unroll(self, inputs, prev_state):
+    flat_inputs = process_inputs(inputs)
+    transformer = EncoderOnlyTransformer(flat_inputs.shape[-1])
+    output = transformer(flat_inputs)
+    return output, ()
+
 CONSTRUCTORS = dict(
     mlp=MLP,
     frame_stack_mlp=FrameStackingMLP,
@@ -303,6 +325,7 @@ CONSTRUCTORS = dict(
     gru=GRU,
     copier=Copier,
     res_lstm=DeepResLSTM,
+    transformer=TransformerWrapper,
 )
 
 DEFAULT_CONFIG = dict(
@@ -313,6 +336,7 @@ DEFAULT_CONFIG = dict(
     gru=GRU.CONFIG,
     copier=Copier.CONFIG,
     res_lstm=DeepResLSTM.CONFIG,
+    transformer=TransformerWrapper.CONFIG,
 )
 
 def construct_network(name, **config):
