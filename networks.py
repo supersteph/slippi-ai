@@ -302,26 +302,31 @@ class TransformerWrapper(Network):
     A Wrapper for the output of the Encoder-only transformer, implementation in transformers.py
   '''
   CONFIG=dict(
-    num_layers=6,
     output_size=128,
-    num_heads=8,
+    num_layers=6,
     ffw_size=512,
+    num_heads=8,
+    mem_size=16,
   )
 
-  def __init__(self, output_size, num_layers, ffw_size, num_heads):
-    super().__init__(name='transformer')
-    self.transformer = EncoderOnlyTransformer(output_size, num_layers, ffw_size, num_heads)
+  def __init__(self, output_size, num_layers, ffw_size, num_heads, mem_size):
+    super().__init__(name='Transformer')
+    self.transformer = EncoderOnlyTransformer(
+        output_size, num_layers, ffw_size, num_heads, mem_size)
 
   def initial_state(self, batch_size):
-    return ()
+    return self.transformer.initial_state(batch_size)
 
   def step(self, inputs, prev_state):
-    raise NotImplementedError()
+    flat_inputs = process_inputs(inputs)
+    flat_inputs = tf.expand_dims(flat_inputs, 0)  # dummy time dim
+    outputs, next_state = self.transformer(flat_inputs, prev_state)
+    outputs = tf.squeeze(outputs, 0)  # remove time dim
+    return outputs, next_state
 
   def unroll(self, inputs, prev_state):
     flat_inputs = process_inputs(inputs)
-    output = self.transformer(flat_inputs)
-    return output, ()
+    return self.transformer(flat_inputs, prev_state)
 
 CONSTRUCTORS = dict(
     mlp=MLP,
