@@ -52,9 +52,13 @@ class AutoRegressiveComponent(snt.Module):
     self.embedder = embedder
 
     self.encoder = snt.nets.MLP([residual_size] * depth + [embedder.size])
-    # the decoder doesn't need depth, because a single Linear decoding a one-hot
-    # has full expressive power over the output
-    self.decoder = snt.Linear(residual_size, w_init=tf.zeros_initializer())
+    self.decoder = snt.Sequential([
+        snt.nets.MLP([residual_size] * depth, activate_final=True),
+        snt.Linear(
+          residual_size,
+          w_init=tf.zeros_initializer(),
+          b_init=tf.zeros_initializer()),
+    ])
 
   def sample(self, residual, prev_raw, **kwargs):
     # directly connect from the same component at time t-1
@@ -66,7 +70,8 @@ class AutoRegressiveComponent(snt.Module):
     sample = self.embedder.sample(input_, **kwargs)
     # condition future components on the current sample
     sample_embedding = self.embedder(sample)
-    residual += self.decoder(sample_embedding)
+    output = tf.concat([residual, sample_embedding], -1)
+    residual += self.decoder(output)
     return residual, sample
 
   def distance(self, residual, prev_raw, target_raw):
@@ -79,7 +84,8 @@ class AutoRegressiveComponent(snt.Module):
     distance = self.embedder.distance(input_, target_raw)
     # auto-regress using the target (aka teacher forcing)
     target_embedding = self.embedder(target_raw)
-    residual += self.decoder(target_embedding)
+    output = tf.concat([residual, target_embedding], -1)
+    residual += self.decoder(output)
     return residual, distance
 
 class AutoRegressive(ControllerHead):
