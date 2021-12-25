@@ -14,12 +14,15 @@ import melee
 
 from slippi_ai import embed, reward, stats, utils
 
+# TODO: split types out into separate file
+
 Nest = Any
 Controller = Nest
 Game = Nest
 
 class CompressedGame(NamedTuple):
   states: Game
+  actions: Controller
   counts: Sequence[int]
   rewards: Sequence[float]
 

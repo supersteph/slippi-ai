@@ -8,15 +8,6 @@ from slippi_ai import data, networks
 RecurrentState = networks.RecurrentState
 ControllerWithRepeat = dict
 
-def get_p1_controller(
-    gamestates: data.Game,
-    action_repeat: Sequence[int],
-) -> ControllerWithRepeat:
-  p1_controller = gamestates['player'][1]['controller_state']
-  return dict(
-      controller=p1_controller,
-      action_repeat=action_repeat)
-
 class Policy(snt.Module):
 
   def __init__(
@@ -35,8 +26,10 @@ class Policy(snt.Module):
       initial_state: RecurrentState,
   ) -> Tuple[tf.Tensor, RecurrentState, dict]:
     gamestates = compressed.states
-    action_repeat = compressed.counts
-    p1_controller = get_p1_controller(gamestates, action_repeat)
+
+    p1_controller = dict(
+        controller=compressed.actions,
+        action_repeat=compressed.counts)
 
     p1_controller_embed = self.controller_head.embed_controller(p1_controller)
     inputs = (gamestates, p1_controller_embed)
@@ -58,8 +51,10 @@ class Policy(snt.Module):
       **kwargs,
   ) -> Tuple[ControllerWithRepeat, RecurrentState]:
     gamestates = compressed.states
-    action_repeat = compressed.counts
-    p1_controller = get_p1_controller(gamestates, action_repeat)
+
+    p1_controller = dict(
+        controller=compressed.actions,
+        action_repeat=compressed.counts)
 
     p1_controller_embed = self.controller_head.embed_controller(p1_controller)
     inputs = (gamestates, p1_controller_embed)
