@@ -124,20 +124,19 @@ def indices_and_counts(
   Returns:
     A tuple (indices, counts).
   """
-  indices = []
+  indices = [0]
   counts = []
 
   count = 0
 
   for i, is_repeat in enumerate(repeats):
     if not is_repeat or count == max_repeat:
-      indices.append(i)  # index of the last repeated action
+      indices.append(i + 1)
       counts.append(count)
       count = 0
     else:
       count += 1
 
-  indices.append(len(repeats))
   counts.append(count)
 
   return np.array(indices), np.array(counts)
@@ -148,15 +147,30 @@ def compress_repeated_actions(
     embed_controller: embed.Embedding,
     max_repeat: int,
   ) -> CompressedGame:
+  """Compress repeated actions.
+
+  The input Game associates each state with the _previous_ action taken. We
+  return states and actions using the same format.
+
+  Returns:
+    A CompressedGame.
+  """
   controllers = game['player'][1]['controller_state']
   controllers = embed_controller.map(lambda e, a: e.preprocess(a), controllers)
 
   repeats = detect_repeated_actions(controllers)
+  repeats = repeats[1:]  # drop first action as it comes _before_ first state
   indices, counts = indices_and_counts(repeats, max_repeat)
 
-  compressed_game = tree.map_structure(lambda a: a[indices], game)
-  sum_rewards = np.array([sum(rewards[idx-count:idx+1]) for idx, count in zip(indices, counts)])
-  return CompressedGame(compressed_game, counts, sum_rewards)
+  state_indices = np.concatenate([indices, [-1]])
+  action_indices = np.concatenate([[0], indices + 1])
+  counts = np.concatenate([[0], counts])
+
+  states = tree.map_structure(lambda a: a[state_indices], game)
+  actions = tree.map_structure(lambda a: a[action_indices], controllers)
+  sum_rewards = np.add.reduceat(rewards, indices)
+  sum_rewards = np.concatenate([[0.], sum_rewards])
+  return CompressedGame(states, actions, counts, sum_rewards)
 
 def _charset(chars: Optional[Iterable[melee.Character]]) -> Set[int]:
   if chars is None:
