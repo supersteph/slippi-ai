@@ -443,3 +443,12 @@ def controller_to_str(controller):
   ]
 
   return ' '.join(components)
+
+def print_embedding(embedding: Embedding):
+  embed_struct = embedding.map(lambda e: e)
+  embed_flat = list(embedding.flatten(embed_struct))
+  total = 0
+  for e in embed_flat:
+    print(e.name, e.size)
+    total += e.size
+  print(total)

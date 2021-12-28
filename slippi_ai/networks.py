@@ -12,6 +12,7 @@ Inputs = Tuple[data.Game, tf.Tensor]
 # our own will be exposed in the input
 embed_game = embed.make_game_embedding(
     player_config=dict(with_controller=False))
+embed.print_embedding(embed_game)
 
 def process_inputs(inputs: Inputs) -> tf.Tensor:
   gamestate, p1_controller_embed = inputs
