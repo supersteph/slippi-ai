@@ -56,9 +56,8 @@ class AutoRegressiveComponent(snt.Module):
     # has full expressive power over the output
     self.decoder = snt.Linear(residual_size, w_init=tf.zeros_initializer())
 
-  def sample(self, residual, prev_raw, **kwargs):
-    # directly connect from the same component at time t-1
-    prev_embedding = self.embedder(prev_raw)
+  def sample(self, residual, prev_embedding, **kwargs):
+    # directly connect from the previous controller at time t-1
     input_ = tf.concat([residual, prev_embedding], -1)
     # project down to the size desired by the component
     input_ = self.encoder(input_)
@@ -69,9 +68,8 @@ class AutoRegressiveComponent(snt.Module):
     residual += self.decoder(sample_embedding)
     return residual, sample
 
-  def distance(self, residual, prev_raw, target_raw):
-    # directly connect from the same component at time t-1
-    prev_embedding = self.embedder(prev_raw)
+  def distance(self, residual, prev_embedding, target_raw):
+    # directly connect from the previous controller at time t-1
     input_ = tf.concat([residual, prev_embedding], -1)
     # project down to the size desired by the component
     input_ = self.encoder(input_)
@@ -102,24 +100,25 @@ class AutoRegressive(ControllerHead):
 
   def sample(self, inputs, prev_controller_state, temperature=None):
     residual = self.to_residual(inputs)
-    prev_controller_flat = self.embed_controller.flatten(prev_controller_state)
+    prev_controller_embed = self.embed_controller(prev_controller_state)
 
     samples = []
-    for res_block, prev in zip(self.res_blocks, prev_controller_flat):
-      residual, sample = res_block.sample(residual, prev, temperature=temperature)
+    for res_block in self.res_blocks:
+      residual, sample = res_block.sample(
+          residual, prev_controller_embed, temperature=temperature)
       samples.append(sample)
 
     return self.embed_controller.unflatten(iter(samples))
 
   def distance(self, inputs, prev_controller_state, target_controller_state):
     residual = self.to_residual(inputs)
-    prev_controller_flat = self.embed_controller.flatten(prev_controller_state)
+    prev_controller_embed = self.embed_controller(prev_controller_state)
     target_controller_flat = self.embed_controller.flatten(target_controller_state)
 
     distances = []
-    for res_block, prev, target in zip(
-        self.res_blocks, prev_controller_flat, target_controller_flat):
-      residual, distance = res_block.distance(residual, prev, target)
+    for res_block, target in zip(self.res_blocks, target_controller_flat):
+      residual, distance = res_block.distance(
+          residual, prev_controller_embed, target)
       distances.append(distance)
 
     return self.embed_controller.unflatten(iter(distances))
