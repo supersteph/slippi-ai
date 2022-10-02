@@ -220,6 +220,8 @@ def from_importance_weights(
 
     cs = tf.minimum(1.0, rhos, name='cs')
     # Append bootstrapped value to get [v1, ..., v_t+1]
+    print('hi bitch')
+    print(values.shape)
     values_t_plus_1 = tf.concat(
         [values[1:], tf.expand_dims(bootstrap_value, 0)], axis=0)
     deltas = clipped_rhos * (rewards + discounts * values_t_plus_1 - values)
