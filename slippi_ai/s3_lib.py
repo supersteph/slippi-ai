@@ -25,7 +25,7 @@ def get_store(s3_creds: str = None) -> Boto3Store:
 
   session = boto3.Session(access_key, secret_key)
   s3 = session.resource('s3')
-  bucket = s3.Bucket('slippi-data')
+  bucket = s3.Bucket('b9-stuff')
   store = Boto3Store(bucket)
   return store
 
