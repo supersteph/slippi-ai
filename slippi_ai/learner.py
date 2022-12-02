@@ -16,12 +16,18 @@ def compute_baseline_loss(advantages):
   # Loss for the baseline, summed over the time dimension.
   # Multiply by 0.5 to match the standard update rule:
   # d(loss) / d(baseline) = advantage
-  return .5 * tf.reduce_mean(tf.square(advantages))
+  return .5 * tf.reduce_mean(tf.math.square(advantages))
 
 def compute_policy_gradient_loss(action_logprobs, advantages):
   advantages = tf.stop_gradient(advantages)
   policy_gradient_loss_per_timestep = -action_logprobs * advantages
   return tf.reduce_mean(policy_gradient_loss_per_timestep)
+
+def compute_entropy_loss(logits):
+  policy = tf.nn.softmax(logits)
+  log_policy = tf.nn.log_softmax(logits)
+  entropy_per_timestep = tf.reduce_sum(-policy * log_policy, axis=-1)
+  return -tf.reduce_sum(entropy_per_timestep)
 
 class Learner:
 
@@ -145,7 +151,7 @@ class OfflineVTraceLearner:
     rewards = tm_gamestate.rewards[1:]
     num_frames = tf.cast(tm_gamestate.counts[1:] + 1, tf.float32)
     discounts = tf.pow(tf.cast(self.discount, tf.float32), num_frames)
-
+  
     with tf.GradientTape() as tape:
 
       target_logprobs, baseline, target_final = self.policy.run(
@@ -170,11 +176,11 @@ class OfflineVTraceLearner:
           target_logprobs,
           vtrace_returns.pg_advantages)
 
-      value_loss = compute_baseline_loss(vtrace_returns.vs - values)
+      value_loss = compute_baseline_loss(values-vtrace_returns.vs)
       value_stddev = tf.sqrt(tf.reduce_mean(value_loss))
       total_loss += self.value_cost * value_loss
 
-      teacher_loss = -tf.reduce_mean(log_rhos)
+      teacher_loss = compute_entropy_loss(behavior_logprobs)
       total_loss += self.teacher_cost * teacher_loss
 
       behavior_loss = -behavior_logprobs
@@ -196,7 +202,6 @@ class OfflineVTraceLearner:
       params: List[tf.Variable] = tape.watched_variables()
       watched_names = [p.name for p in params]
       trainable_names = [v.name for v in self.policy.trainable_variables]
-      # print(set(watched_names).difference(set(trainable_names)))
       assert set(watched_names) == set(trainable_names)
       grads = tape.gradient(total_loss, params)
       self.optimizer.apply(grads, params)
