@@ -16,12 +16,12 @@ def compute_baseline_loss(advantages):
   # Loss for the baseline, summed over the time dimension.
   # Multiply by 0.5 to match the standard update rule:
   # d(loss) / d(baseline) = advantage
-  return .5 * tf.reduce_mean(tf.math.square(advantages))
+  return .5 * tf.reduce_sum(tf.math.square(advantages))
 
 def compute_policy_gradient_loss(action_logprobs, advantages):
   advantages = tf.stop_gradient(advantages)
   policy_gradient_loss_per_timestep = -action_logprobs * advantages
-  return tf.reduce_mean(policy_gradient_loss_per_timestep)
+  return tf.reduce_sum(policy_gradient_loss_per_timestep)
 
 def compute_entropy_loss(logits):
   policy = tf.nn.softmax(logits)
