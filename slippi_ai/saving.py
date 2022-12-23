@@ -22,6 +22,7 @@ def get_config_from_sacred(tag: str) -> dict:
   return run['config']
 
 def build_policy(
+  name:str,
   controller_head_config: dict,
   max_action_repeat: int,
   network_config: dict,
@@ -34,13 +35,15 @@ def build_policy(
           max_action_repeat))
 
   return policies.Policy(
+      name,
       networks.construct_network(**network_config),
       controller_heads.construct(**controller_head_config))
 
-def build_policy_from_sacred(tag: str) -> policies.Policy:
+def build_policy_from_sacred(tag: str, name: str) -> policies.Policy:
   config = get_config_from_sacred(tag)
 
   return build_policy(
+      name=name,
       controller_head_config=config['controller_head'],
       max_action_repeat=config['data']['max_action_repeat'],
       network_config=config['network'],
@@ -65,8 +68,8 @@ dummy_loss_batch = tree.map_structure(
     lambda x: np.full((1, 1), x),
     dummy_compressed_game)
 
-def load_policy(tag: str) -> policies.Policy:
-  policy = build_policy_from_sacred(tag)
+def load_policy(tag: str, name: str) -> policies.Policy:
+  policy = build_policy_from_sacred(tag, name)
   params = get_policy_params_from_s3(tag)
 
   initial_state = policy.initial_state(1)
