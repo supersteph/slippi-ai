@@ -82,10 +82,13 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
             _config['data']['max_action_repeat']))
 
     behavior_policy = policies.Policy(
+        'Behavior_Policy',
         networks.construct_network(**_config['network']),
         controller_heads.construct(**controller_head_config))
+    behavior_policy.trainable=False
 
     policy = policies.Policy(
+        'Policy',
         networks.construct_network(**_config['network']),
         controller_heads.construct(**controller_head_config))
 

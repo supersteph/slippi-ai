@@ -151,13 +151,12 @@ class OfflineVTraceLearner:
     rewards = tm_gamestate.rewards[1:]
     num_frames = tf.cast(tm_gamestate.counts[1:] + 1, tf.float32)
     discounts = tf.pow(tf.cast(self.discount, tf.float32), num_frames)
+    behavior_logprobs, _, behavior_final = self.behavior_policy.run(tm_gamestate, behavior_initial)
   
     with tf.GradientTape() as tape:
 
       target_logprobs, baseline, target_final = self.policy.run(
           tm_gamestate, target_initial)
-      behavior_logprobs, _, behavior_final = self.behavior_policy.run(
-          tm_gamestate, behavior_initial)
 
       log_rhos = target_logprobs - tf.stop_gradient(behavior_logprobs)
       values = baseline[:-1]
@@ -200,6 +199,7 @@ class OfflineVTraceLearner:
 
     if train:
       params: List[tf.Variable] = tape.watched_variables()
+
       watched_names = [p.name for p in params]
       trainable_names = [v.name for v in self.policy.trainable_variables]
       assert set(watched_names) == set(trainable_names)

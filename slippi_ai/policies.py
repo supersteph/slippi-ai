@@ -22,10 +22,11 @@ class Policy(snt.Module):
 
   def __init__(
       self,
+      name: str,
       network: networks.Network,
       controller_head: ControllerHead,
   ):
-    super().__init__(name='Policy')
+    super().__init__(name=name)
     self.network = network
     self.controller_head = controller_head
     self.initial_state = self.network.initial_state
