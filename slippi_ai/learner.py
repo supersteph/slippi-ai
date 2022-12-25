@@ -175,7 +175,7 @@ class OfflineVTraceLearner:
           target_logprobs,
           vtrace_returns.pg_advantages)
 
-      value_loss = compute_baseline_loss(values-vtrace_returns.vs)
+      value_loss = compute_baseline_loss(vtrace_returns.vs-values)
       value_stddev = tf.sqrt(tf.reduce_mean(value_loss))
       total_loss += self.value_cost * value_loss
 

@@ -204,6 +204,9 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
         policy.initial_state, input_signature=[tf.TensorSpec((), tf.int64)])
     saved_module.all_variables = policy.variables
 
+    behavior_module = snt.Module()
+    behavior_module.all_variables = behavior_policy.variables
+
     sample_signature = [
         utils.nested_add_batch_dims(gamestate_signature, 1),
         utils.nested_add_batch_dims(hidden_state_signature, 1),
@@ -221,6 +224,7 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
       if save_to_s3:
         _log.info('saving model to S3: %s', s3_keys.saved_model)
         s3_store.put(s3_keys.saved_model, saved_model_bytes.getvalue())
+        s3_store.put(s3_keys.saved_model+'behavior_policy', saved_model_bytes.getvalue())
 
     save_model = utils.Periodically(save_model, save_interval)
 
