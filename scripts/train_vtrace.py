@@ -24,7 +24,7 @@ from slippi_ai import (
     utils,
 )
 from slippi_ai.learner import OfflineVTraceLearner as Learner
-
+import copy
 ex = sacred.Experiment('imitation')
 
 mongo_uri = os.environ.get('MONGO_URI')
@@ -234,6 +234,8 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
     save_model = utils.Periodically(save_model, save_interval)
 
   FRAMES_PER_MINUTE = 60 * 60
+  save_model()
+  print('saved it first')
 
   for _ in range(num_epochs):
     start_time = time.perf_counter()
@@ -241,12 +243,18 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
     # train for epoch_time seconds
     steps = 0
     num_frames = 0
+    prev_variables = copy.deepcopy(behavior_policy.variables)
     while True:
       train_stats = train_manager.step()
       steps += 1
       num_frames += train_stats['num_frames']
 
       elapsed_time = time.perf_counter() - start_time
+      for i in range(len(behavior_policy.variables)):
+        if not np.array_equiv(behavior_policy.variables[i].numpy(), prev_variables[i].numpy()):
+          print('wtf')
+          raise Exception('something screwed up')
+
       if elapsed_time > epoch_time: break
 
     step.assign_add(steps)
