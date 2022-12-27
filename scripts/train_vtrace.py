@@ -236,6 +236,7 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
   FRAMES_PER_MINUTE = 60 * 60
   save_model()
   print('saved it first')
+  raise Exception('what popping')
 
   for _ in range(num_epochs):
     start_time = time.perf_counter()
