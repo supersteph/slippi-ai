@@ -229,7 +229,7 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
       if save_to_s3:
         _log.info('saving model to S3: %s', s3_keys.saved_model)
         s3_store.put(s3_keys.saved_model, saved_model_bytes.getvalue())
-        s3_store.put(s3_keys.saved_model+'behavior_policy', behavior_fsaved_model_bytes.getvalue())
+        s3_store.put(s3_keys.saved_model+'behavior_policy', behavior_saved_model_bytes.getvalue())
 
     save_model = utils.Periodically(save_model, save_interval)
 
