@@ -221,7 +221,7 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
       with tarfile.open(fileobj=saved_model_bytes, mode='x') as tar:
         tar.add(saved_model_path, arcname='.')
 
-      tf.saved_model.save(saved_module, saved_model_path+'behavior_policy')
+      tf.saved_model.save(behavior_module, saved_model_path+'behavior_policy')
       behavior_saved_model_bytes = io.BytesIO()
       with tarfile.open(fileobj=behavior_saved_model_bytes, mode='x') as tar:
         tar.add(saved_model_path+'behavior_policy', arcname='.')
@@ -243,7 +243,7 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
     # train for epoch_time seconds
     steps = 0
     num_frames = 0
-    prev_variables = copy.deepcopy(behavior_policy.variables)
+    prev_variables = copy.deepcopy(behavior_policy.variables.numpy())
     while True:
       train_stats = train_manager.step()
       steps += 1
