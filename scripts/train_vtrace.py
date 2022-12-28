@@ -60,6 +60,12 @@ def config():
 def _get_loss(stats: dict):
   return stats['total_loss'].numpy().mean()
 
+def compare(a,b):
+  for i in range(len(a)):
+    if not np.array_equiv(a[i].numpy(), b[i].numpy()):
+      print('wtf')
+      return False
+  return True
 @ex.automain
 def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log, _run):
   embed_controller = embed.embed_controller_discrete  # TODO: configure
@@ -234,9 +240,6 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
     save_model = utils.Periodically(save_model, save_interval)
 
   FRAMES_PER_MINUTE = 60 * 60
-  save_model()
-  print('saved it first')
-  raise Exception('idk man')
 
   for _ in range(num_epochs):
     start_time = time.perf_counter()
