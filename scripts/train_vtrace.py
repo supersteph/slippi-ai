@@ -212,6 +212,8 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
 
     behavior_module = snt.Module()
     behavior_module.all_variables = behavior_policy.variables
+    behavior_module.initial_state = tf.function(
+        behavior_policy.initial_state, input_signature=[tf.TensorSpec((), tf.int64)])
 
     sample_signature = [
         utils.nested_add_batch_dims(gamestate_signature, 1),
