@@ -247,7 +247,7 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
     # train for epoch_time seconds
     steps = 0
     num_frames = 0
-    prev_variables = copy.deepcopy(behavior_policy.variables.numpy())
+    prev_variables = copy.deepcopy(behavior_policy.variables)
     while True:
       train_stats = train_manager.step()
       steps += 1
