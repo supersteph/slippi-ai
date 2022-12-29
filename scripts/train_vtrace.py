@@ -220,7 +220,7 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
         utils.nested_add_batch_dims(hidden_state_signature, 1),
     ]
     saved_module.sample = utils.with_flat_signature(policy.sample, sample_signature)
-
+    behavior_module.sample = utils.with_flat_signature(behavior_policy.sample, sample_signature)
     saved_model_path = os.path.join(expt_dir, 'saved_model')
 
     def save_model():
