@@ -204,7 +204,7 @@ class OfflineVTraceLearner:
       trainable_names = [v.name for v in self.policy.trainable_variables]
       assert set(watched_names) == set(trainable_names)
       grads = tape.gradient(total_loss, params)
-      self.optimizer.apply(grads, params)
+      self.optimizer.apply(-grads, params)
 
       if self.decay_rate:
         for param in params:
