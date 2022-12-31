@@ -185,6 +185,7 @@ class OfflineVTraceLearner:
       behavior_loss = -behavior_logprobs
       if self.train_behavior_policy:
         total_loss += behavior_loss
+      total_loss = -total_loss
 
     final_states = (target_final, behavior_final)
 
@@ -203,7 +204,7 @@ class OfflineVTraceLearner:
       watched_names = [p.name for p in params]
       trainable_names = [v.name for v in self.policy.trainable_variables]
       assert set(watched_names) == set(trainable_names)
-      grads = tape.gradient(-total_loss, params)
+      grads = tape.gradient(total_loss, params)
       self.optimizer.apply(grads, params)
 
       if self.decay_rate:
