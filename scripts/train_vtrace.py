@@ -60,6 +60,22 @@ def config():
 def _get_loss(stats: dict):
   return stats['total_loss'].numpy().mean()
 
+def _print_losses(stats: dict):
+  value_loss = stats['value_loss'].numpy().mean()
+  teacher_loss = stats['teacher_loss'].numpy().mean()
+  print('policy gradient loss')
+  print(stats['total_loss'].numpy().mean()-0.5*value_loss-0.00025*teacher_loss)
+  print(stats['policy_gradient_loss'].numpy().mean())
+  print('value loss')
+  print(value_loss)
+  print('entropy loss')
+  print(teacher_loss)
+  print('advantages?')
+  print(stats['advantages'])
+  print('logprobs')
+  print(stats['logprobs'])
+
+
 def compare(a,b):
   for i in range(len(a)):
     if not np.array_equiv(a[i].numpy(), b[i].numpy()):
@@ -271,6 +287,8 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
 
     train_loss = _get_loss(train_stats)
     test_loss = _get_loss(test_stats)
+    # _print_losses(train_stats)
+    # _print_losses(test_stats)
     epoch = train_stats['epoch']
 
     all_stats = dict(

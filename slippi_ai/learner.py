@@ -20,7 +20,7 @@ def compute_baseline_loss(advantages):
 
 def compute_policy_gradient_loss(action_logprobs, advantages):
   advantages = tf.stop_gradient(advantages)
-  policy_gradient_loss_per_timestep = -action_logprobs * advantages
+  policy_gradient_loss_per_timestep = action_logprobs * advantages
   return tf.reduce_sum(policy_gradient_loss_per_timestep)
 
 def compute_entropy_loss(logits):
@@ -102,7 +102,7 @@ class OfflineVTraceLearner:
       value_cost=0.5,
       reward_halflife=2,  # measured in seconds
       teacher_cost=0.00025,
-      train_behavior_policy=True,
+      train_behavior_policy=False,
   )
 
   def __init__(self,
@@ -174,29 +174,36 @@ class OfflineVTraceLearner:
       total_loss = compute_policy_gradient_loss(
           target_logprobs,
           vtrace_returns.pg_advantages)
+      policy_gradient_loss = compute_policy_gradient_loss(
+          target_logprobs,
+          vtrace_returns.pg_advantages)
 
       value_loss = compute_baseline_loss(vtrace_returns.vs-values)
       value_stddev = tf.sqrt(tf.reduce_mean(value_loss))
       total_loss += self.value_cost * value_loss
 
-      teacher_loss = compute_entropy_loss(behavior_logprobs)
+      teacher_loss = -compute_entropy_loss(behavior_logprobs)
       total_loss += self.teacher_cost * teacher_loss
 
       behavior_loss = -behavior_logprobs
       if self.train_behavior_policy:
+        print('training which should be wrong')
         total_loss += behavior_loss
-      total_loss = -total_loss
 
     final_states = (target_final, behavior_final)
 
     stats = dict(
         total_loss=total_loss,
+        policy_gradient_loss = policy_gradient_loss,
         value_loss=value_loss,
         value_stddev=value_stddev,
         teacher_loss=teacher_loss,
-        behavior_loss=behavior_loss,
+        advantages = [vtrace_returns.pg_advantages],
+        logprobs = [target_logprobs]
     )
     stats = tf.nest.map_structure(tf.reduce_mean, stats)
+    stats['advantages']=vtrace_returns.pg_advantages
+    stats['logprobs'] = target_logprobs
 
     if train:
       params: List[tf.Variable] = tape.watched_variables()
