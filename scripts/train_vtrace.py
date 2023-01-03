@@ -226,17 +226,13 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
         policy.initial_state, input_signature=[tf.TensorSpec((), tf.int64)])
     saved_module.all_variables = policy.variables
 
-    behavior_module = snt.Module()
-    behavior_module.all_variables = behavior_policy.variables
-    behavior_module.initial_state = tf.function(
-        behavior_policy.initial_state, input_signature=[tf.TensorSpec((), tf.int64)])
+
 
     sample_signature = [
         utils.nested_add_batch_dims(gamestate_signature, 1),
         utils.nested_add_batch_dims(hidden_state_signature, 1),
     ]
     saved_module.sample = utils.with_flat_signature(policy.sample, sample_signature)
-    behavior_module.sample = utils.with_flat_signature(behavior_policy.sample, sample_signature)
     saved_model_path = os.path.join(expt_dir, 'saved_model')
 
     def save_model():
@@ -245,15 +241,9 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
       with tarfile.open(fileobj=saved_model_bytes, mode='x') as tar:
         tar.add(saved_model_path, arcname='.')
 
-      tf.saved_model.save(behavior_module, saved_model_path+'behavior_policy')
-      behavior_saved_model_bytes = io.BytesIO()
-      with tarfile.open(fileobj=behavior_saved_model_bytes, mode='x') as tar:
-        tar.add(saved_model_path+'behavior_policy', arcname='.')
-
       if save_to_s3:
         _log.info('saving model to S3: %s', s3_keys.saved_model)
         s3_store.put(s3_keys.saved_model, saved_model_bytes.getvalue())
-        s3_store.put(s3_keys.saved_model+'behavior_policy', behavior_saved_model_bytes.getvalue())
 
     save_model = utils.Periodically(save_model, save_interval)
 
@@ -287,8 +277,8 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
 
     train_loss = _get_loss(train_stats)
     test_loss = _get_loss(test_stats)
-    # _print_losses(train_stats)
-    # _print_losses(test_stats)
+    _print_losses(train_stats)
+    _print_losses(test_stats)
     epoch = train_stats['epoch']
 
     all_stats = dict(
