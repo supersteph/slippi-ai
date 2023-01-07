@@ -93,6 +93,12 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
   init_tag = _config['init_tag']
 
   if init_tag:
+    controller_head_config = dict(
+        _config['controller_head'],
+        embed_controller=embed.get_controller_embedding_with_action_repeat(
+            embed_controller,
+            _config['data']['max_action_repeat']))
+
     #behavior_policy = saving.load_policy(init_tag,'Behavior_Policy')
     behavior_policy = policies.Policy(
         'Behavior_Policy',
