@@ -70,10 +70,12 @@ def _print_losses(stats: dict):
   print(value_loss)
   print('entropy loss')
   print(teacher_loss)
-  print('advantages?')
-  print(stats['advantages'])
-  print('logprobs')
-  print(stats['logprobs'])
+  print('rewards')
+  print(stats['rewards'].numpy())
+  # print('advantages?')
+  # print(stats['advantages'])
+  # print('logprobs')
+  # print(stats['logprobs'])
 
 
 def compare(a,b):
@@ -91,7 +93,11 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
   init_tag = _config['init_tag']
 
   if init_tag:
-    behavior_policy = saving.load_policy(init_tag,'Behavior_Policy')
+    #behavior_policy = saving.load_policy(init_tag,'Behavior_Policy')
+    behavior_policy = policies.Policy(
+        'Behavior_Policy',
+        networks.construct_network(**_config['network']),
+        controller_heads.construct(**controller_head_config))
     policy = saving.load_policy(init_tag,'Policy')
     init_config = saving.get_config_from_sacred(init_tag)
     data_config['max_action_repeat'] = init_config['data']['max_action_repeat']

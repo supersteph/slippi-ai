@@ -20,7 +20,12 @@ def compute_baseline_loss(advantages):
 
 def compute_policy_gradient_loss(action_logprobs, advantages):
   advantages = tf.stop_gradient(advantages)
+  print('advantages')
+  print(advantages.shape)
+  print(action_logprobs.shape)
   policy_gradient_loss_per_timestep = action_logprobs * advantages
+  print('loss per timesteph')
+  print(policy_gradient_loss_per_timestep.shape)
   return tf.reduce_sum(policy_gradient_loss_per_timestep)
 
 def compute_entropy_loss(logits):
@@ -149,6 +154,8 @@ class OfflineVTraceLearner:
     tm_gamestate = tf.nest.map_structure(to_time_major, bm_gamestate)
 
     rewards = tm_gamestate.rewards[1:]
+    print('these are rewards?')
+    print(rewards)
     num_frames = tf.cast(tm_gamestate.counts[1:] + 1, tf.float32)
     discounts = tf.pow(tf.cast(self.discount, tf.float32), num_frames)
     behavior_logprobs, _, behavior_final = self.behavior_policy.run(tm_gamestate, behavior_initial)
@@ -199,7 +206,8 @@ class OfflineVTraceLearner:
         value_stddev=value_stddev,
         teacher_loss=teacher_loss,
         advantages = [vtrace_returns.pg_advantages],
-        logprobs = [target_logprobs]
+        logprobs = [target_logprobs],
+        rewards = rewards
     )
     stats = tf.nest.map_structure(tf.reduce_mean, stats)
     stats['advantages']=vtrace_returns.pg_advantages

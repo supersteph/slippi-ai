@@ -30,5 +30,6 @@ def compute_rewards(game, enemies=[2], allies=[1], damage_ratio=0.01):
   damages = {p : process_damages(game['player'][p]['percent']) for p in pids}
 
   losses = {p : deaths[p] + damage_ratio * damages[p] for p in pids}
-
+  print('rewards computation here')
+  print(sum(losses[p] for p in enemies) - sum(losses[p] for p in allies))
   return sum(losses[p] for p in enemies) - sum(losses[p] for p in allies)
