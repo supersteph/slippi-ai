@@ -154,8 +154,6 @@ class OfflineVTraceLearner:
     tm_gamestate = tf.nest.map_structure(to_time_major, bm_gamestate)
 
     rewards = tm_gamestate.rewards[1:]
-    print('these are rewards?')
-    print(rewards)
     num_frames = tf.cast(tm_gamestate.counts[1:] + 1, tf.float32)
     discounts = tf.pow(tf.cast(self.discount, tf.float32), num_frames)
     behavior_logprobs, _, behavior_final = self.behavior_policy.run(tm_gamestate, behavior_initial)
@@ -206,6 +204,7 @@ class OfflineVTraceLearner:
         value_stddev=value_stddev,
         teacher_loss=teacher_loss,
         advantages = [vtrace_returns.pg_advantages],
+        values = values,
         logprobs = [target_logprobs],
         rewards = rewards
     )
