@@ -179,15 +179,15 @@ class OfflineVTraceLearner:
       # total_loss = compute_policy_gradient_loss(
       #     target_logprobs,
       #     vtrace_returns.pg_advantages)
-      # policy_gradient_loss = compute_policy_gradient_loss(
-      #     target_logprobs,
-      #     vtrace_returns.pg_advantages)
+      policy_gradient_loss = compute_policy_gradient_loss(
+          target_logprobs,
+          vtrace_returns.pg_advantages)
 
       # value_loss = compute_baseline_loss(vtrace_returns.vs-values)
       # value_stddev = tf.sqrt(tf.reduce_mean(value_loss))
       # total_loss += self.value_cost * value_loss
 
-      # teacher_loss = -compute_entropy_loss(behavior_logprobs)
+      teacher_loss = -compute_entropy_loss(behavior_logprobs)
       # total_loss += self.teacher_cost * teacher_loss
 
       behavior_loss = -behavior_logprobs
