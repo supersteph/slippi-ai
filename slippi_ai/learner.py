@@ -3,6 +3,7 @@ import sonnet as snt
 import tensorflow as tf
 import slippi_ai.vtrace as vtrace
 from slippi_ai.data import Batch
+import sys
 
 from slippi_ai.policies import Policy
 
@@ -20,12 +21,7 @@ def compute_baseline_loss(advantages):
 
 def compute_policy_gradient_loss(action_logprobs, advantages):
   advantages = tf.stop_gradient(advantages)
-  print('advantages')
-  print(advantages.shape)
-  print(action_logprobs.shape)
   policy_gradient_loss_per_timestep = action_logprobs * advantages
-  print('loss per timesteph')
-  print(policy_gradient_loss_per_timestep.shape)
   return tf.reduce_sum(policy_gradient_loss_per_timestep)
 
 def compute_entropy_loss(logits):
@@ -162,7 +158,10 @@ class OfflineVTraceLearner:
 
       target_logprobs, baseline, target_final = self.policy.run(
           tm_gamestate, target_initial)
-
+      tf.print('logprobs moment',output_stream=sys.stdout)
+      tf.print(target_logprobs,output_stream=sys.stdout)
+      tf.print('behavior logprobs moment',output_stream=sys.stdout)
+      tf.print(behavior_logprobs,output_stream=sys.stdout)
       log_rhos = target_logprobs - tf.stop_gradient(behavior_logprobs)
       values = baseline[:-1]
       bootstrap_value = baseline[-1]
@@ -204,13 +203,14 @@ class OfflineVTraceLearner:
         value_stddev=value_stddev,
         teacher_loss=teacher_loss,
         advantages = [vtrace_returns.pg_advantages],
-        values = values,
+      
         logprobs = [target_logprobs],
-        rewards = rewards
     )
     stats = tf.nest.map_structure(tf.reduce_mean, stats)
     stats['advantages']=vtrace_returns.pg_advantages
     stats['logprobs'] = target_logprobs
+    stats['values'] = values
+    stats['rewards']=rewards
 
     if train:
       params: List[tf.Variable] = tape.watched_variables()

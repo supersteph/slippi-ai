@@ -27,8 +27,8 @@ from __future__ import print_function
 import collections
 
 import tensorflow as tf
-
 nest = tf.nest
+import sys
 
 
 VTraceFromLogitsReturns = collections.namedtuple(
@@ -188,7 +188,10 @@ def from_importance_weights(
       pg_advantages: A float32 tensor of shape [T, B]. Can be used as the
         advantage in the calculation of policy gradients.
   """
+  tf.print('log_rhos',output_stream=sys.stdout)
   log_rhos = tf.convert_to_tensor(log_rhos, dtype=tf.float32)
+  tf.print(log_rhos, output_stream=sys.stdout)
+  tf.print(tf.reduce_mean(log_rhos), output_stream=sys.stdout)
   discounts = tf.convert_to_tensor(discounts, dtype=tf.float32)
   rewards = tf.cast(rewards, dtype=tf.float32)
   values = tf.convert_to_tensor(values, dtype=tf.float32)
@@ -213,6 +216,8 @@ def from_importance_weights(
 
   with tf.name_scope(name) as scope:
     rhos = tf.exp(log_rhos)
+    tf.print('rhos', output_stream=sys.stdout)
+    tf.print(rhos, output_stream=sys.stdout)
     if clip_rho_threshold is not None:
       clipped_rhos = tf.minimum(clip_rho_threshold, rhos, name='clipped_rhos')
     else:
@@ -251,6 +256,8 @@ def from_importance_weights(
                                    name='clipped_pg_rhos')
     else:
       clipped_pg_rhos = rhos
+    print('these are rhos?')
+    tf.print(tf.reduce_mean(clipped_pg_rhos),output_stream=sys.stdout)
     pg_advantages = (
         clipped_pg_rhos * (rewards + discounts * vs_t_plus_1 - values))
 

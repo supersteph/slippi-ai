@@ -63,17 +63,19 @@ def _get_loss(stats: dict):
 def _print_losses(stats: dict):
   value_loss = stats['value_loss'].numpy().mean()
   teacher_loss = stats['teacher_loss'].numpy().mean()
-  print('values')
-  print(stats['values'].numpy())
-  print('policy gradient loss')
-  print(stats['total_loss'].numpy().mean()-0.5*value_loss-0.00025*teacher_loss)
-  print(stats['policy_gradient_loss'].numpy().mean())
-  print('value loss')
-  print(value_loss)
-  print('entropy loss')
-  print(teacher_loss)
-  print('rewards')
-  print(stats['rewards'].numpy())
+  # print('values')
+  # print(stats['values'].numpy())
+  # print('policy gradient loss')
+  # print(stats['total_loss'].numpy().mean()-0.5*value_loss-0.00025*teacher_loss)
+  # print(stats['policy_gradient_loss'].numpy().mean())
+  # print('value loss')
+  # print(value_loss)
+  # print('entropy loss')
+  # print(teacher_loss)
+  # print('values')
+  # print(stats['values'].numpy())
+  # print('rewards')
+  # print(sum(stats['rewards'].numpy()))
   # print('advantages?')
   # print(stats['advantages'])
   # print('logprobs')
@@ -101,15 +103,16 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
             embed_controller,
             _config['data']['max_action_repeat']))
 
-    #behavior_policy = saving.load_policy(init_tag,'Behavior_Policy')
-    behavior_policy = policies.Policy(
-        'Behavior_Policy',
-        networks.construct_network(**_config['network']),
-        controller_heads.construct(**controller_head_config))
+    behavior_policy = saving.load_policy(init_tag,'Behavior_Policy')
+    # behavior_policy = policies.Policy(
+    #     'Behavior_Policy',
+    #     networks.construct_network(**_config['network']),
+    #     controller_heads.construct(**controller_head_config))
     policy = saving.load_policy(init_tag,'Policy')
     init_config = saving.get_config_from_sacred(init_tag)
     data_config['max_action_repeat'] = init_config['data']['max_action_repeat']
     # TODO: initialize optimizer state?
+
   else:
     controller_head_config = dict(
         _config['controller_head'],
@@ -291,8 +294,8 @@ def main(dataset, expt_dir, num_epochs, epoch_time, save_interval, _config, _log
 
     train_loss = _get_loss(train_stats)
     test_loss = _get_loss(test_stats)
-    _print_losses(train_stats)
-    _print_losses(test_stats)
+    # _print_losses(train_stats)
+    # _print_losses(test_stats)
     epoch = train_stats['epoch']
 
     all_stats = dict(
