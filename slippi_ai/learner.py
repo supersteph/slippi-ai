@@ -158,10 +158,6 @@ class OfflineVTraceLearner:
 
       target_logprobs, baseline, target_final = self.policy.run(
           tm_gamestate, target_initial)
-      tf.print('logprobs moment',output_stream=sys.stdout)
-      tf.print(target_logprobs,output_stream=sys.stdout)
-      tf.print('behavior logprobs moment',output_stream=sys.stdout)
-      tf.print(behavior_logprobs,output_stream=sys.stdout)
       log_rhos = target_logprobs - tf.stop_gradient(behavior_logprobs)
       values = baseline[:-1]
       bootstrap_value = baseline[-1]
@@ -191,6 +187,7 @@ class OfflineVTraceLearner:
       # total_loss += self.teacher_cost * teacher_loss
 
       behavior_loss = -behavior_logprobs
+      tf.print('total_loss')
       tf.print(total_loss,output_stream=sys.stdout)
       if self.train_behavior_policy:
         print('training which should be wrong')
